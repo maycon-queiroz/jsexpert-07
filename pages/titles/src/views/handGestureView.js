@@ -2,11 +2,15 @@ export default class HandGestureView {
   #handsCanvas = document.querySelector("#hands");
   #canvasContext = this.#handsCanvas.getContext("2d");
   #fingerLookupIndexes;
+  #styler;
 
-  constructor({ fingerLookupIndexes }) {
+  constructor({ fingerLookupIndexes, styler }) {
     this.#handsCanvas.width = globalThis.window.innerWidth - 15;
     this.#handsCanvas.height = globalThis.window.innerHeight;
     this.#fingerLookupIndexes = fingerLookupIndexes;
+    this.#styler = styler;
+
+    setTimeout(() => styler.loadDocumentStyles(), 200);
   }
 
   clearCanvas() {
@@ -32,22 +36,21 @@ export default class HandGestureView {
     }
   }
 
-  clickOnElement(x, y){
-    const element = document.elementFromPoint(x,y)
-    if(!element) return;
-    console.log({element, x, y})
+  clickOnElement(x, y) {
+    const element = document.elementFromPoint(x, y);
+    if (!element) return;
+    console.log({ element, x, y });
 
-    const rect = element.getBoundingClientRect()
-    const event = new MouseEvent('click',{
-      view:window,
+    const rect = element.getBoundingClientRect();
+    const event = new MouseEvent("click", {
+      view: window,
       buddles: true,
       Cancelable: true,
       clientX: rect.left + x,
-      clientY: rect.top  + y
-    })
+      clientY: rect.top + y,
+    });
 
-    element.dispatchEvent(event)
-
+    element.dispatchEvent(event);
   }
 
   #drawJoients(keypoints) {
@@ -67,7 +70,9 @@ export default class HandGestureView {
   #drawFingersAndHoverElements(keypoints) {
     const fingers = Object.keys(this.#fingerLookupIndexes);
     for (const finger of fingers) {
-      const points = this.#fingerLookupIndexes[finger].map((index) => keypoints[index]);
+      const points = this.#fingerLookupIndexes[finger].map(
+        (index) => keypoints[index]
+      );
 
       const region = new Path2D();
       const [{ x, y }] = points;
@@ -78,7 +83,21 @@ export default class HandGestureView {
       }
 
       this.#canvasContext.stroke(region);
+      this.#hoverElement(finger, points);
     }
+  }
+
+  #hoverElement(finger, points) {
+    if(finger !== 'indexFinger') return;
+
+    const tip = points.find(item => item.name === 'index_finger_tip')
+    const element = document.elementFromPoint(tip.x, tip.y);
+
+    if (!element) return;
+    const fn = () => this.#styler.toggleStyle(element, ':hover')
+    fn();
+
+    setTimeout(()=> fn(), 500);
   }
 
   loop(fn) {

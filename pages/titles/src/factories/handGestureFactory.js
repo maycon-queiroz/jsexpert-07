@@ -13,14 +13,17 @@ import {
   knowGestures,
 } from "../utils/util.js";
 
+import "../../lib/sdk.js";
+
 import Camera from "../../../../lib/share/camera.js";
 const camera = await Camera.init();
+const styler = new PseudoStyler();
 
 const HandGestureFactory = {
   async initialize() {
     return HandGestureController.initialize({
       camera,
-      view: new HandGestureView({ fingerLookupIndexes }),
+      view: new HandGestureView({ fingerLookupIndexes, styler }),
       service: new HandGestureService({
         fingerPose: window.fp,
         handPoseDetection: window.handPoseDetection,
