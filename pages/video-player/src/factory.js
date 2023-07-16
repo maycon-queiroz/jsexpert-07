@@ -4,6 +4,11 @@ import Controller from "./controller.js";
 import Service from "./service.js";
 import View from "./view.js";
 
+const [rootPath] = window.location.href.split("/pages/");
+const videoUrl = `${rootPath}/assets/video.mp4`;
+const view = new View();
+view.setVideoSRC(videoUrl);
+
 async function getWorker() {
   if (supportsWorkerType()) {
     console.log("suporta");
@@ -52,12 +57,12 @@ const worker = await getWorker();
 worker.postMessage("message")
 
 const camera = await Camera.init();
-const [rootPath] = window.location.href.split("/pages/");
+
 
 const factory = {
   async initialize() {
     return Controller.initialize({
-      view: new View(),
+      view,
       camera,
       worker
     });
