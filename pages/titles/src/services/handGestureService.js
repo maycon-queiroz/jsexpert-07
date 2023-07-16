@@ -1,15 +1,24 @@
-import { gestureStrings, knowGestures } from "../utils/gestures.js";
 
 export default class HandGestureService {
   #gestureEstimator;
   #handPoseDetection;
   #handVersion;
+  #gestureStrings;
+  #knowGestures;
   #detector = null;
 
-  constructor({ fingerPose, handPoseDetection, handVersion }) {
-    this.#gestureEstimator = new fingerPose.GestureEstimator(knowGestures);
+  constructor({
+    fingerPose,
+    handPoseDetection,
+    handVersion,
+    gestureStrings,
+    knowGestures,
+  }) {
     this.#handPoseDetection = handPoseDetection;
     this.#handVersion = handVersion;
+    this.#gestureStrings = gestureStrings;
+    this.#knowGestures = knowGestures;
+    this.#gestureEstimator = new fingerPose.GestureEstimator(this.#knowGestures);
   }
 
   async estimate(keypoints3D) {
@@ -21,19 +30,23 @@ export default class HandGestureService {
     return predictions.gestures;
   }
 
-  async * detectGestures(predictions) {    
+  async * detectGestures(predictions) {
     for (const hand of predictions) {
       if (!hand || !hand.keypoints3D) continue;
       const gestures = await this.estimate(hand.keypoints3D);
 
-      const result = gestures.reduce(
-        (previous, current) => (previous.score > current.score) ? previous : current
-        )
+      if (!gestures?.length) continue;
 
-        const {x, y} = hand.keypoints.find(keypoint => keypoint.name === "index_finger_tip")
-        yield {event: result.name, x,y}
+      const result = gestures.reduce((previous, current) =>
+        previous.score > current.score ? previous : current
+      );
 
-        console.log(`chose: ${gestureStrings[result.name]}`)
+      const { x, y } = hand.keypoints.find(
+        (keypoint) => keypoint.name === "index_finger_tip"
+      );
+      yield { event: result.name, x, y };
+
+      console.log(`chose: ${this.#gestureStrings[result.name]}`);
     }
   }
 
